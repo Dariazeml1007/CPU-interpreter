@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/cpu_emulator.dir/link.d CMakeFiles/cpu_emulator.dir/source/cpu.cpp.o CMakeFiles/cpu_emulator.dir/source/main.cpp.o -o cpu_emulator

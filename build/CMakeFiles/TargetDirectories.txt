@@ -1,0 +1,3 @@
+/mnt/c/Users/Дарья/Desktop/Владос/CPU-interpreter/build/CMakeFiles/cpu_emulator.dir
+/mnt/c/Users/Дарья/Desktop/Владос/CPU-interpreter/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/Дарья/Desktop/Владос/CPU-interpreter/build/CMakeFiles/rebuild_cache.dir

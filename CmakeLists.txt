@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.10)
+project(CPU_Emulator)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Указываем папку с заголовочными файлами
+include_directories(include)
+
+# Исходные файлы - используем полные пути
+set(SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/cpu.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp
+)
+
+# Проверяем существование файлов
+foreach(source ${SOURCES})
+    if(NOT EXISTS ${source})
+        message(WARNING "Source file not found: ${source}")
+    endif()
+endforeach()
+
+add_executable(cpu_emulator ${SOURCES})
+target_compile_options(cpu_emulator PRIVATE -Wall -Wextra)
