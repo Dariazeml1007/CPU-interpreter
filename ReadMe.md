@@ -1,10 +1,5 @@
 # Processor Instruction Set
 
-## Notation
-- `X[n]` — general-purpose register n
-- `PC` — program counter
-- `sign_extend(x)` — sign-extend to 32 bits
-- `memory[addr]` — memory access at address `addr`
 
 ## Instruction Formats (32 bits)
 - **R-type**: `opcode(6) rs(5) rt(5) rd(5) shamt(5) funct(6)`
@@ -192,13 +187,5 @@
 
 ---
 
-## Implementation Notes
 
-- All instructions are 32-bit and aligned to 4-byte boundaries.
-- Memory accesses must be word-aligned; unaligned access is undefined.
-- Immediate values are sign-extended.
-- `PC` increments by 4 unless modified.
-- Writes to `X[0]` are ignored.
-- Use `X[8]` to select system call.
 
-✅ **Instruction set complete. Ready for C++ interpreter.**
