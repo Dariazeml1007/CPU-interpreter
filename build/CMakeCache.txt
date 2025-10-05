@@ -227,6 +227,9 @@ CPU_Emulator_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 CPU_Emulator_SOURCE_DIR:STATIC=/mnt/c/Users/Дарья/Desktop/Владос/CPU-interpreter
 
+//Run automated tests instead of user input
+RUN_TESTS:BOOL=OFF
+
 
 ########################
 # INTERNAL cache entries

@@ -1,5 +1,30 @@
-# Processor Instruction Set
+# CPU Emulator with Custom ISA and Ruby-based Micro Assembler
 
+This project implements a custom CPU emulator supporting a unique ISA (Instruction Set Architecture) designed by a creative architect, featuring 14 distinct instructions with varying encodings across different instruction sets, including several unconventional RISC-style operations. The emulator is complemented by a Ruby-based micro-assembler that allows writing machine code using Ruby method calls resembling assembly syntax, which then generates binary instruction files for execution in the emulator. The system provides a complete toolchain from assembly-like code creation to binary execution in a simulated hardware environment.
+
+## 🛠️ Build and Run
+ 1. Create a build directory and generate build files:
+  ```c
+cmake -B build -D RUN_TESTS=OFF
+  ```
+ 2. Build the project:
+  ```c
+cmake --build build
+  ```
+3. Run the executables:
+  ```c
+./cpu_emulator
+
+  ```
+---
+
+##  Run Built-in Tests
+To run automated tests instead  - rebuild the project with RUN_TESTS=ON
+  ```c
+cmake -B build -D RUN_TESTS=ON
+  ```
+
+---
 
 ## Instruction Formats (32 bits)
 - **R-type**: `opcode(6) rs(5) rt(5) rd(5) shamt(5) funct(6)`
