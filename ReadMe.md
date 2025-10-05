@@ -201,16 +201,7 @@ cmake -B build -D RUN_TESTS=ON
 
 ---
 
-## Special-Purpose Registers
 
-| Register | Name    | Purpose |
-|----------|---------|--------|
-| `X[0]`   | `$zero` | Always 0; writes ignored |
-| `X[1]`   | `$ra`   | Return Address |
-| `X[2]`   | `$sp`   | Stack Pointer |
-| `X[8]`   | `$v0`   | System call number |
-
----
 
 
 
