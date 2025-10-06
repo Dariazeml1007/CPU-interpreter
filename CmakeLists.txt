@@ -34,3 +34,25 @@ if(RUN_TESTS)
 else()
     message(STATUS "Building in NORMAL mode - will execute program from binary file")
 endif()
+
+find_package(Ruby REQUIRED)
+if(Ruby_FOUND)
+    message(STATUS "Found Ruby: ${RUBY_EXECUTABLE}")
+
+    # Цель для ассемблера
+    add_custom_target(assemble
+        COMMAND ${RUBY_EXECUTABLE} ${CMAKE_SOURCE_DIR}/ruby/assembler.rb
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ruby
+        COMMENT "Running Ruby assembler..."
+    )
+
+    # Цель которая сначала ассемблирует, потом запускает эмулятор
+    add_custom_target(run
+        COMMAND ${CMAKE_SOURCE_DIR}/build/cpu_emulator
+        DEPENDS cpu_emulator assemble
+        COMMENT "Running emulator with assembled program..."
+    )
+
+else()
+    message(WARNING "Ruby not found - assembler will not work")
+endif()

@@ -32,7 +32,7 @@ void CPU::execute_CLS(CPU& cpu, uint32_t instr)
     uint8_t rs = (instr >> 16) & 0x1F;
 
     uint32_t value = cpu.gpr[rs];
-    uint32_t sign_bit = (value >> 31) & 1;  // знаковый бит
+    uint32_t sign_bit = (value >> 31) & 1;
 
     int count = 0;
     for (int i = 31; i >= 0; i--)
@@ -70,14 +70,14 @@ void CPU::execute_SYSCALL(CPU& cpu, uint32_t instr)
 
         case SYS_PRINT_INT:
 
-            std::cout << "Output: " << std::dec << cpu.gpr[0] << std::endl;
+            std::cout << "Output: " << std::dec << cpu.gpr[3] << std::endl;
             cpu.gpr[0] = 0;
             break;
 
 
        case SYS_READ_INT:
             std::cout << "Input: ";
-            std::cin >> cpu.gpr[0];
+            std::cin >> cpu.gpr[3];
             std::cout << std::endl;
 
             break;

@@ -115,7 +115,7 @@ int main()
         CPU cpu(64 * 1024);  // 64 KB памяти
 
         // Загружаем программу из файла
-        load_binary_file(cpu, "program.bin");
+        load_binary_file(cpu, "./ruby/output.bin");
 
         // Запускаем до 1000 шагов
         cpu.run(1000);
@@ -274,13 +274,12 @@ test_(
     test_(
         {
             UINT32_C(0b10110100000010000000000000000001), // ADDI r8, r0, 1 (PRINT_INT)
-            UINT32_C(0b10110100000000000000000000000111), // ADDI r0, r0, 7 (continue)
+            UINT32_C(0b10110100000000110000000000000111), // ADDI r3, r0, 7 (continue)
             UINT32_C(0b00000000000000000000000000101000), // SYSCALL
-            UINT32_C(0b10110100000000110000000000000001), // ADDI r3, r0, 1 (continue)
             UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
             UINT32_C(0b00000000000000000000000000101000), // SYSCALL
         },
-        1,
+        7,
         "SYSCALL: system call execution"
     );
 }
