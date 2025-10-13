@@ -7,16 +7,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(RUN_TESTS "Run automated tests instead of user input" OFF)
 
-# Указываем папку с заголовочными файлами
+
 include_directories(include)
 
-# Исходные файлы
+
 set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/source/cpu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp
 )
 
-# Проверяем существование файлов
+
 foreach(source ${SOURCES})
     if(NOT EXISTS ${source})
         message(FATAL_ERROR "Source file not found: ${source}")
