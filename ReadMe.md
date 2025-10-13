@@ -33,6 +33,7 @@ cmake -B build -D RUN_TESTS=ON
 
 ---
 
+
 ### 1. LD — Load Word
 
 | 31:26 | 25:21 | 20:16 | 15:0     |
@@ -42,7 +43,6 @@ cmake -B build -D RUN_TESTS=ON
 **Assembler:** `LD rt, offset(base)`
 **Operation:** Load word from memory into register.
 **Notes:** `offset` must be multiple of 4. Misaligned access → undefined behavior.
-
 ---
 
 ### 2. CLS — Count Leading Signs

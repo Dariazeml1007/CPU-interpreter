@@ -7,29 +7,30 @@
 
 void tests();
 
-void load_binary_file(CPU& cpu, const std::string& filename)
-{
+void load_binary_file(CPU& cpu, const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
 
-    if (!file.is_open())
-    {
+    if (!file.is_open()) {
         throw std::runtime_error("Cannot open file: " + filename);
     }
 
-    // Начальный адрес кода — 0x1000
     uint32_t address = 0x00001000;
-
     uint32_t instruction;
-    while (file.read(reinterpret_cast<char*>(&instruction), 4))
-    {
+
+    std::cout << "=== BINARY FILE LOADING ===" << std::endl;
+
+    while (file.read(reinterpret_cast<char*>(&instruction), 4)) {
+        // Правильное форматирование вывода
+        std::cout << "Loading: 0x" << std::hex << std::setw(8) << std::setfill('0')
+                  << instruction << " to address 0x" << address << std::endl;
+
         cpu.get_memory()->write32(address, instruction);
         address += 4;
     }
 
-    // Устанавливаем PC на начало программы
     cpu.set_pc(0x00001000);
-
     std::cout << "Loaded " << (address - 0x1000) / 4 << " instructions from " << filename << std::endl;
+    std::cout << "=== LOADING COMPLETE ===" << std::endl;
 }
 
 void print_registers(CPU& cpu)
@@ -47,37 +48,25 @@ void print_registers(CPU& cpu)
     std::cout << "------------------------" << std::endl;
 }
 
-
 void write_code_to_memory(const std::vector<uint32_t>& program, CPU& cpu)
 {
-    uint32_t code_start_address = 0x00001000;  // Код с адреса 0x1000
-    uint32_t data_start_address = 0x00002000;  // Данные с адреса 0x2000
-    uint32_t stack_start_address = 0x00003000; // Стек с адреса 0x3000
-
+    uint32_t code_start_address = 0x00001000;
 
     for (size_t i = 0; i < program.size(); i++)
     {
         uint32_t address = code_start_address + i * 4;
         uint32_t instruction = program[i];
 
+        // Меняем порядок байт на little-endian:
         cpu.get_memory()->write8(address,     (instruction >> 0)  & 0xFF);
         cpu.get_memory()->write8(address + 1, (instruction >> 8)  & 0xFF);
         cpu.get_memory()->write8(address + 2, (instruction >> 16) & 0xFF);
         cpu.get_memory()->write8(address + 3, (instruction >> 24) & 0xFF);
+        // ↑ Этот порядок ПРАВИЛЬНЫЙ для little-endian!
     }
 
-    // Инициализируем данные нулями - ИСПРАВЛЕНО
-    for (uint32_t addr = data_start_address; addr < data_start_address + 0x1000; addr += 4) {
-        cpu.get_memory()->write32(addr, 0);  // ← используй get_memory()
-    }
-
-    // Инициализируем стек
-    cpu.set_register(2, stack_start_address); // $sp = 0x3000
-
-    // Устанавливаем PC на начало кода
     cpu.set_pc(code_start_address);
 }
-
 
 void test_(const std::vector<uint32_t>& program, int expected_result, const std::string& test_name)
 {

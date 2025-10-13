@@ -62,6 +62,153 @@ def syscall
   puts "SYSCALL (номер в X8)"
 end
 
+def ld(rt, offset_base)
+  opcode = 0b111001
+
+  #  "offset(base)"
+  offset_str, base_str = offset_base.split('(')
+  base_str = base_str.chomp(')')  # Убираем закрывающую скобку
+
+  offset = offset_str.empty? ? 0 : offset_str.to_i
+  base = base_str
+
+  # Собираем инструкцию
+  instruction = (opcode << 26) | (reg_num(base) << 21) | (reg_num(rt) << 16) | (offset & 0xFFFF)
+  emit(instruction)
+
+  puts "LD #{rt}, #{offset}(#{base})"
+end
+
+def cls(rd, rs)
+  opcode = 0b000000
+  funct = 0b001010
+
+  instruction = (opcode << 26) |
+                (reg_num(rd) << 21) |
+                (reg_num(rs) << 16) |
+                funct
+
+  emit(instruction)
+  puts "CLS #{rd}, #{rs}"
+end
+
+def bne(rs, rt, instruction_offset)
+  opcode = 0b011000
+  instruction = (opcode << 26) | (reg_num(rs) << 21) | (reg_num(rt) << 16) | (instruction_offset & 0xFFFF)
+  emit(instruction)
+  puts "BNE #{rs}, #{rt}, #{instruction_offset} (jump #{instruction_offset} instructions)"
+end
+
+def beq(rs, rt, instruction_offset)
+  opcode = 0b011010
+  instruction = (opcode << 26) | (reg_num(rs) << 21) | (reg_num(rt) << 16) | (instruction_offset & 0xFFFF)
+  emit(instruction)
+  puts "BEQ #{rs}, #{rt}, #{instruction_offset} (jump #{instruction_offset} instructions)"
+end
+
+def sbit(rd, rs, imm5)
+
+  if imm5.is_a?(String) && imm5.start_with?('#')
+    imm5 = imm5[1..-1].to_i  # Убираем '#' и преобразуем в число
+  else
+    imm5 = imm5.to_i
+  end
+
+  opcode = 0b011100
+  zeros_10_0 = 0b00000000000
+
+  instruction = (opcode << 26) |
+                (reg_num(rd) << 21) |
+                (reg_num(rs) << 16) |
+                (imm5 << 11) |
+                zeros_10_0
+
+  emit(instruction)
+  puts "SBIT #{rd}, #{rs}, ##{imm5}"
+end
+
+def bext(rd, rs1, rs2)
+  opcode = 0b000000
+  zero_10_6 = 0b00000
+  funct = 0b010100
+
+  instruction = (opcode << 26) |
+                (reg_num(rd) << 21) |
+                (reg_num(rs1) << 16) |
+                (reg_num(rs2) << 11) |
+                (zero_10_6 << 6) |
+                funct
+
+  emit(instruction)
+  puts "BEXT #{rd}, #{rs1}, #{rs2}"
+end
+
+def j(instruction_index)
+  opcode = 0b011111
+  # instruction_index - это номер инструкции (0, 1, 2, 3...)
+  # Именно это ожидает JMP команда
+  instruction = (opcode << 26) | (instruction_index & 0x3FFFFFF)
+  emit(instruction)
+  puts "J #{instruction_index} (jump to instruction ##{instruction_index})"
+end
+
+def ssat(rd, rs, imm5)
+  if imm5.is_a?(String) && imm5.start_with?('#')
+    imm5 = imm5[1..-1].to_i  # Убираем '#' и преобразуем в число
+  else
+    imm5 = imm5.to_i
+  end
+
+  opcode = 0b001101
+  zeros_10_0 = 0b00000000000
+
+  instruction = (opcode << 26) |
+                (reg_num(rd) << 21) |
+                (reg_num(rs) << 16) |
+                (imm5 << 11) |
+                zeros_10_0
+
+  emit(instruction)
+  puts "SSAT #{rd}, #{rs}, ##{imm5}"
+end
+
+
+def st(rt, offset_base)
+  opcode = 0b110111
+
+  #  "offset(base)"
+  offset_str, base_str = offset_base.split('(')
+  base_str = base_str.chomp(')')  # Убираем закрывающую скобку
+
+  offset = offset_str.empty? ? 0 : offset_str.to_i
+  base = base_str
+
+  instruction = (opcode << 26) | (reg_num(base) << 21) | (reg_num(rt) << 16) | (offset & 0xFFFF)
+  emit(instruction)
+
+  puts "ST #{rt}, #{offset}(#{base})"
+end
+
+def stp(rt1, rt2, offset_base)
+  opcode = 0b010101
+
+  offset_str, base_str = offset_base.split('(')
+  base_str = base_str.chomp(')')  # Убираем закрывающую скобку
+
+  offset = offset_str.empty? ? 0 : offset_str.to_i
+  base = base_str
+
+  instruction = (opcode << 26) |
+                (reg_num(base) << 21) |
+                (reg_num(rt1) << 16) |
+                (reg_num(rt2) << 11) |
+                (offset & 0x7FF)
+
+  emit(instruction)
+  puts "STP #{rt1}, #{rt2}, #{offset}(#{base})"
+end
+
+
   private
 
   def emit(instruction)
@@ -110,13 +257,51 @@ end
 
 assembler = Assembler.new
 program = assembler.assemble do
-  addi 'r1', 'r0', 5    # r1 = 5
-  addi 'r2', 'r0', 3    # r2 = 3
-  add 'r3', 'r1', 'r2'  # r3 = r1 + r2 = 8
-  sub 'r4', 'r1', 'r2'  # r4 = r1 - r2 = 2
-  addi 'r8', 'r0', 1    # r8 = 1
+  addi 'r8', 'r0', 3      # SYS_READ_INT
+  syscall                  # результат в r3
+  add 'r1', 'r0', 'r3'    # r1 = n (из r3)
+
+  # Инициализация переменных Фибоначчи
+  addi 'r2', 'r0', 0      # F(n-2) = 0
+  addi 'r3', 'r0', 1      # F(n-1) = 1
+  addi 'r4', 'r0', 1      # i = 1 (текущий индекс)
+
+  # Проверка особых случаев
+  addi 'r5', 'r0', 0
+  beq 'r1', 'r5', 6       # if n == 0, jump to output_0 (instruction 16)
+
+  addi 'r5', 'r0', 1
+  beq 'r1', 'r5', 5       # if n == 1, jump to output_1 (instruction 17)
+
+  # Основной цикл Фибоначчи
+  # instruction 8:
+  addi 'r4', 'r4', 1      # i++
+  # instruction 9:
+  add 'r5', 'r2', 'r3'    # temp = F(n-2) + F(n-1)
+  # instruction 10:
+  add 'r2', 'r0', 'r3'    # F(n-2) = F(n-1)
+  # instruction 11:
+  add 'r3', 'r0', 'r5'    # F(n-1) = temp
+  # instruction 12:
+  bne 'r4', 'r1', -5      # if i != n, loop back 5 instructions (to instruction 8)
+
+  # Вывод результата (instruction 13)
+  addi 'r8', 'r0', 1      # SYS_PRINT_INT
+  # instruction 14:
   syscall
-  addi 'r8', 'r0', 0    # r8 = 1
+  # instruction 15:
+  addi 'r8', 'r0', 0      # SYS_EXIT
+  # instruction 16:
   syscall
 
+  # Особые случаи
+  # instruction 17: (n=0)
+  addi 'r3', 'r0', 0      # F(0) = 0
+  # instruction 18:
+  j 13                    # jump to output (instruction 13)
+
+  # instruction 19: (n=1)
+  addi 'r3', 'r0', 1      # F(1) = 1
+  # instruction 20:
+  j 13                    # jump to output (instruction 13)
 end

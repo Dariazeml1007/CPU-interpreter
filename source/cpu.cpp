@@ -89,14 +89,21 @@ void CPU::execute_SYSCALL(CPU& cpu, uint32_t instr)
 
 void CPU::execute_BNE(CPU& cpu, uint32_t instr)
 {
-    uint8_t rs  = (instr >> 21) & 0x1F;
-    uint8_t rt    = (instr >> 16) & 0x1F;
-    int16_t offset = instr & 0xFFFF;
+    uint8_t rs = (instr >> 21) & 0x1F;
+    uint8_t rt = (instr >> 16) & 0x1F;
+    int16_t offset = static_cast<int16_t>(instr & 0xFFFF);
 
-    int32_t target = static_cast<int32_t>(offset) << 2;
-    if (cpu.gpr[rs] != cpu.gpr[rt])
+    std::cout << "BNE: r" << (int)rs << "=" << cpu.gpr[rs]
+              << " vs r" << (int)rt << "=" << cpu.gpr[rt]
+              << " offset=" << offset << std::endl;
+
+    if (cpu.gpr[rs] != cpu.gpr[rt]) {
+        int32_t target = static_cast<int32_t>(offset) << 2;
         cpu.pc += target;
-
+        std::cout << "  -> JUMP by " << target << " to 0x" << std::hex << cpu.pc << std::endl;
+    } else {
+        std::cout << "  -> NO JUMP" << std::endl;
+    }
 }
 
 void CPU::execute_BEQ(CPU& cpu, uint32_t instr)

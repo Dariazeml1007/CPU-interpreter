@@ -14,30 +14,21 @@ public:
 
     void write32(uint32_t address, uint32_t value)
     {
-        if (address + 3 >= data.size())
-        {
-            std::cout << "Memory write32 out of bounds" << std::endl;
-            return;
-        }
-        // Little-endian
-        data[address]     = (value >> 0) & 0xFF;
-        data[address + 1] = (value >> 8) & 0xFF;
-        data[address + 2] = (value >> 16) & 0xFF;
-        data[address + 3] = (value >> 24) & 0xFF;
+    // Little-endian запись
+    write8(address,     (value >> 0) & 0xFF);
+    write8(address + 1, (value >> 8) & 0xFF);
+    write8(address + 2, (value >> 16) & 0xFF);
+    write8(address + 3, (value >> 24) & 0xFF);
     }
 
-    uint32_t read32(uint32_t address) const
-    {
-        if (address + 3 >= data.size())
-        {
-            std::cout << "Memory read32 out of bounds" << std::endl;
-            return 0;
-        }
-        // Little-endian чтение
-        return (data[address] << 0) | (data[address + 1] << 8) |
-               (data[address + 2] << 16) | (data[address + 3] << 24);
-    }
-
+uint32_t read32(uint32_t address)
+{
+    // Little-endian чтение
+    return (read8(address) << 0) |
+           (read8(address + 1) << 8) |
+           (read8(address + 2) << 16) |
+           (read8(address + 3) << 24);
+}
     uint8_t read8(uint32_t address) const { return data[address]; }
     void write8(uint32_t address, uint8_t value) { data[address] = value; }
 
