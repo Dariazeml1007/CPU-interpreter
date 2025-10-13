@@ -65,7 +65,7 @@ cmake -B build -D RUN_TESTS=ON
 
 **Assembler:** `SYSCALL`
 **Operation:** Trigger system call exception.
-**Notes:** `X[8]` = syscall number; args in `X[0]–X[7]`; result in `X[0]`.
+**Notes:** `X[8]` = syscall number; args in `X[3]`; result in `X[3]`.
 
 ---
 

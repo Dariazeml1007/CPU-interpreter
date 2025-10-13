@@ -151,15 +151,14 @@ private:
            switch (funct)
            {
                 case 0b001010:
-                    std::cout << "Executing CLS" << std::endl;
                     execute_CLS(*this, instr);
                     break;
                 case 0b010010:
-                    std::cout << "Executing ADD" << std::endl;
+
                     execute_ADD(*this, instr);
                     break;
                 case 0b010100:
-                    std::cout << "Executing BEXT" << std::endl;
+
                     execute_BEXT(*this, instr);
                     break;
                 case 0b101000:
@@ -167,7 +166,7 @@ private:
                     execute_SYSCALL(*this, instr);
                     break;
                 case 0b110110:
-                    std::cout << "Executing SUB" << std::endl;
+
                     execute_SUB(*this, instr);
                     break;
                 default:
@@ -192,4 +191,6 @@ private:
         //        std::cout << "Unknown instruction opcode: 0x" << std::hex << (int)opcode << std::endl;
         }
     }
+
 };
+

@@ -7,7 +7,8 @@
 
 void tests();
 
-void load_binary_file(CPU& cpu, const std::string& filename) {
+void load_binary_file(CPU& cpu, const std::string& filename)
+{
     std::ifstream file(filename, std::ios::binary);
 
     if (!file.is_open()) {
@@ -19,11 +20,8 @@ void load_binary_file(CPU& cpu, const std::string& filename) {
 
     std::cout << "=== BINARY FILE LOADING ===" << std::endl;
 
-    while (file.read(reinterpret_cast<char*>(&instruction), 4)) {
-        // Правильное форматирование вывода
-        std::cout << "Loading: 0x" << std::hex << std::setw(8) << std::setfill('0')
-                  << instruction << " to address 0x" << address << std::endl;
-
+    while (file.read(reinterpret_cast<char*>(&instruction), 4))
+    {
         cpu.get_memory()->write32(address, instruction);
         address += 4;
     }
@@ -57,12 +55,12 @@ void write_code_to_memory(const std::vector<uint32_t>& program, CPU& cpu)
         uint32_t address = code_start_address + i * 4;
         uint32_t instruction = program[i];
 
-        // Меняем порядок байт на little-endian:
+
         cpu.get_memory()->write8(address,     (instruction >> 0)  & 0xFF);
         cpu.get_memory()->write8(address + 1, (instruction >> 8)  & 0xFF);
         cpu.get_memory()->write8(address + 2, (instruction >> 16) & 0xFF);
         cpu.get_memory()->write8(address + 3, (instruction >> 24) & 0xFF);
-        // ↑ Этот порядок ПРАВИЛЬНЫЙ для little-endian!
+
     }
 
     cpu.set_pc(code_start_address);
@@ -215,33 +213,44 @@ void tests()
         "BEQ: branch if equal"
     );
 
-    // Тест 9: BNE (branch if not equal)
-    test_(
-        {
-            UINT32_C(0b10110100000000010000000000000101), // ADDI r1, r0, 5
-            UINT32_C(0b10110100000000100000000000000011), // ADDI r2, r0, 3
-            UINT32_C(0b01100000001000100000000000000001), // BNE r1, r2, 1
-            UINT32_C(0b10110100000000110000000000000000), // ADDI r3, r0, 0 (skipped)
-            UINT32_C(0b10110100000000110000000000001111), // ADDI r3, r0, 15 (target)
-            UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
-            UINT32_C(0b00000000000000000000000000101000), // SYSCALL
-        },
-        15,
-        "BNE: branch if not equal"
-    );
-
-   // Тест 11: J (jump)
 test_(
     {
-        UINT32_C(0b10110100000000110000000000000000), // ADDI r3, r0, #0   -> r3 = 0
-        UINT32_C(0b01111100000000000000000000000010), // J 2               -> jump to addr = PC_base | (2 << 2) = +8 bytes
-        UINT32_C(0b10110100000000110000000000001111), // ADDI r3, r0, #15  -> skipped
-        UINT32_C(0b10110100000000110000000000101010), // ADDI r3, r0, #42  -> executed, r3 = 42
+        // instruction 0-1: Инициализация
+        UINT32_C(0b10110100000000010000000000000011), // ADDI r1, r0, 3
+        UINT32_C(0b10110100000000100000000000000011), // ADDI r2, r0, 3
+
+        // instruction 2: BEQ - должен прыгать (3 == 3)
+        UINT32_C(0b01101000001000100000000000000011), // BNE r1, r2, 3
+
+        // instruction 3-4: Путь если НЕ прыгнули
+        UINT32_C(0b10110100000000110000000000000100), // ADDI r3, r0, 4
+        UINT32_C(0b01111100000000000000000000000110), // J 6 (прыжок на выход)
+
+        // instruction 5: Путь если прыгнули
+        UINT32_C(0b10110100000000110000000000001111), // ADDI r3, r0, 15
+
+        // instruction 6-7: Выход
         UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
         UINT32_C(0b00000000000000000000000000101000), // SYSCALL
     },
-    42,
-    "J: jump instruction"
+    15,
+    "BNE: branch if not equal"
+);
+
+test_(
+    {
+        // instruction 0: Просто прыжок на выход
+        UINT32_C(0b01111100000000000000000000000010), // J 2
+
+        // instruction 1: Эта инструкция должна быть пропущена
+        UINT32_C(0b10110100000000110000000000001111), // ADDI r3, r0, 15
+
+        // instruction 2-3: Выход
+        UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
+        UINT32_C(0b00000000000000000000000000101000), // SYSCALL
+    },
+    0,  // Ожидаем 0, т.к. r3 не менялся
+    "J: simple jump to exit"
 );
 
     // Тест 11: STP (store pair)

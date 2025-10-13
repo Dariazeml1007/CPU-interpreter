@@ -69,13 +69,15 @@ void CPU::execute_SYSCALL(CPU& cpu, uint32_t instr)
             break;
 
         case SYS_PRINT_INT:
-
+            std::cout << "=========================================================\n";
             std::cout << "Output: " << std::dec << cpu.gpr[3] << std::endl;
+             std::cout << "=========================================================\n";
             cpu.gpr[0] = 0;
             break;
 
 
        case SYS_READ_INT:
+
             std::cout << "Input: ";
             std::cin >> cpu.gpr[3];
             std::cout << std::endl;
@@ -93,16 +95,11 @@ void CPU::execute_BNE(CPU& cpu, uint32_t instr)
     uint8_t rt = (instr >> 16) & 0x1F;
     int16_t offset = static_cast<int16_t>(instr & 0xFFFF);
 
-    std::cout << "BNE: r" << (int)rs << "=" << cpu.gpr[rs]
-              << " vs r" << (int)rt << "=" << cpu.gpr[rt]
-              << " offset=" << offset << std::endl;
 
-    if (cpu.gpr[rs] != cpu.gpr[rt]) {
+    if (cpu.gpr[rs] != cpu.gpr[rt])
+    {
         int32_t target = static_cast<int32_t>(offset) << 2;
         cpu.pc += target;
-        std::cout << "  -> JUMP by " << target << " to 0x" << std::hex << cpu.pc << std::endl;
-    } else {
-        std::cout << "  -> NO JUMP" << std::endl;
     }
 }
 
@@ -112,16 +109,19 @@ void CPU::execute_BEQ(CPU& cpu, uint32_t instr)
     uint8_t rt    = (instr >> 16) & 0x1F;
     int16_t offset = instr & 0xFFFF;
 
-    int32_t target = static_cast<int32_t>(offset) << 2;
     if (cpu.gpr[rs] == cpu.gpr[rt])
+    {
+        int32_t target = static_cast<int32_t>(offset) << 2;
         cpu.pc += target;
+
+    }
 
 }
 
 void CPU::execute_SBIT(CPU& cpu, uint32_t instr)
 {
     uint8_t rd = (instr >> 21) & 0x1F;
-    uint8_t rs = (instr >> 16) & 0x1F;
+   // uint8_t rs = (instr >> 16) & 0x1F;
     uint8_t imm5 = (instr >> 11) & 0x1F;
 
 
@@ -185,8 +185,11 @@ void CPU::execute_ADD(CPU& cpu, uint32_t instr)
 void CPU::execute_J(CPU& cpu, uint32_t instr)
 {
     uint32_t index = instr & 0x3FFFFFF;
-    uint32_t return_addr = cpu.pc - 4;
-    cpu.pc = return_addr + (index << 2);
+    uint32_t base = cpu.pc & 0xFFFFF000;
+    uint32_t offset = index << 2;
+
+    cpu.pc = base | offset;
+
 }
 
 void CPU::execute_SSAT(CPU& cpu, uint32_t instr)
