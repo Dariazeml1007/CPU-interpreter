@@ -11,7 +11,8 @@ void load_binary_file(CPU& cpu, const std::string& filename)
 {
     std::ifstream file(filename, std::ios::binary);
 
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         throw std::runtime_error("Cannot open file: " + filename);
     }
 
@@ -99,12 +100,12 @@ int main()
 
         tests();
     #else
-        CPU cpu(64 * 1024);  // 64 KB памяти
+        CPU cpu(64 * 1024);
 
-        // Загружаем программу из файла
+
         load_binary_file(cpu, "./ruby/output.bin");
 
-        // Запускаем до 1000 шагов
+
         cpu.run(1000);
     #endif
 

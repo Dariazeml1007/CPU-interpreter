@@ -12,15 +12,13 @@ class Assembler
     return @code
   end
 
-  # ADDI rt, rs, #imm - I-формат
   def addi(rt, rs, imm)
-    opcode = 0b101101  #
+    opcode = 0b101101
     instruction = (opcode << 26) | (reg_num(rs) << 21) | (reg_num(rt) << 16) | (imm & 0xFFFF)
     emit(instruction)
     puts "ADDI #{rt}, #{rs}, #{imm} -> opcode: #{opcode}"
   end
 
-  # ADD rd, rs, rt - R-формат
   def add(rd, rs, rt)
     opcode = 0b000000
     funct = 0b010010
@@ -36,7 +34,6 @@ class Assembler
     puts "ADD #{rd}, #{rs}, #{rt} -> opcode: #{opcode}, funct: #{funct}"
   end
 
-  # SUB rd, rs, rt - R-формат
   def sub(rd, rs, rt)
     opcode = 0b000000
     funct = 0b110110
@@ -52,159 +49,158 @@ class Assembler
     puts "SUB #{rd}, #{rs}, #{rt} -> opcode: #{opcode}, funct: #{funct}"
   end
 
-def syscall
-  opcode = 0b000000
-  funct = 0b101000
-  code = 0
+  def syscall
+    opcode = 0b000000
+    funct = 0b101000
+    code = 0
 
-  instruction = (opcode << 26) | (code << 6) | funct
-  emit(instruction)
-  puts "SYSCALL (номер в X8)"
-end
-
-def ld(rt, offset_base)
-  opcode = 0b111001
-
-  #  "offset(base)"
-  offset_str, base_str = offset_base.split('(')
-  base_str = base_str.chomp(')')  # Убираем закрывающую скобку
-
-  offset = offset_str.empty? ? 0 : offset_str.to_i
-  base = base_str
-
-  # Собираем инструкцию
-  instruction = (opcode << 26) | (reg_num(base) << 21) | (reg_num(rt) << 16) | (offset & 0xFFFF)
-  emit(instruction)
-
-  puts "LD #{rt}, #{offset}(#{base})"
-end
-
-def cls(rd, rs)
-  opcode = 0b000000
-  funct = 0b001010
-
-  instruction = (opcode << 26) |
-                (reg_num(rd) << 21) |
-                (reg_num(rs) << 16) |
-                funct
-
-  emit(instruction)
-  puts "CLS #{rd}, #{rs}"
-end
-
-def bne(rs, rt, instruction_offset)
-  opcode = 0b011000
-  instruction = (opcode << 26) | (reg_num(rs) << 21) | (reg_num(rt) << 16) | (instruction_offset & 0xFFFF)
-  emit(instruction)
-  puts "BNE #{rs}, #{rt}, #{instruction_offset} (jump #{instruction_offset} instructions)"
-end
-
-def beq(rs, rt, instruction_offset)
-  opcode = 0b011010
-  instruction = (opcode << 26) | (reg_num(rs) << 21) | (reg_num(rt) << 16) | (instruction_offset & 0xFFFF)
-  emit(instruction)
-  puts "BEQ #{rs}, #{rt}, #{instruction_offset} (jump #{instruction_offset} instructions)"
-end
-
-def sbit(rd, rs, imm5)
-
-  if imm5.is_a?(String) && imm5.start_with?('#')
-    imm5 = imm5[1..-1].to_i  # Убираем '#' и преобразуем в число
-  else
-    imm5 = imm5.to_i
+    instruction = (opcode << 26) | (code << 6) | funct
+    emit(instruction)
+    puts "SYSCALL (номер в X8)"
   end
 
-  opcode = 0b011100
-  zeros_10_0 = 0b00000000000
+  def ld(rt, offset_base)
+    opcode = 0b111001
 
-  instruction = (opcode << 26) |
+    #  "offset(base)"
+    offset_str, base_str = offset_base.split('(')
+    base_str = base_str.chomp(')')  # Убираем закрывающую скобку
+
+    offset = offset_str.empty? ? 0 : offset_str.to_i
+    base = base_str
+
+    # Собираем инструкцию
+    instruction = (opcode << 26) | (reg_num(base) << 21) | (reg_num(rt) << 16) | (offset & 0xFFFF)
+    emit(instruction)
+
+    puts "LD #{rt}, #{offset}(#{base})"
+  end
+
+  def cls(rd, rs)
+    opcode = 0b000000
+    funct = 0b001010
+
+    instruction = (opcode << 26) |
+                  (reg_num(rd) << 21) |
+                  (reg_num(rs) << 16) |
+                  funct
+
+    emit(instruction)
+    puts "CLS #{rd}, #{rs}"
+  end
+
+  def bne(rs, rt, instruction_offset)
+    opcode = 0b011000
+    instruction = (opcode << 26) | (reg_num(rs) << 21) | (reg_num(rt) << 16) | (instruction_offset & 0xFFFF)
+    emit(instruction)
+    puts "BNE #{rs}, #{rt}, #{instruction_offset} (jump #{instruction_offset} instructions)"
+  end
+
+  def beq(rs, rt, instruction_offset)
+    opcode = 0b011010
+    instruction = (opcode << 26) | (reg_num(rs) << 21) | (reg_num(rt) << 16) | (instruction_offset & 0xFFFF)
+    emit(instruction)
+    puts "BEQ #{rs}, #{rt}, #{instruction_offset} (jump #{instruction_offset} instructions)"
+  end
+
+  def sbit(rd, rs, imm5)
+
+    if imm5.is_a?(String) && imm5.start_with?('#')
+      imm5 = imm5[1..-1].to_i  # Убираем '#' и преобразуем в число
+    else
+      imm5 = imm5.to_i
+    end
+
+    opcode = 0b011100
+    zeros_10_0 = 0b00000000000
+
+    instruction = (opcode << 26) |
                 (reg_num(rd) << 21) |
                 (reg_num(rs) << 16) |
                 (imm5 << 11) |
                 zeros_10_0
 
-  emit(instruction)
-  puts "SBIT #{rd}, #{rs}, ##{imm5}"
-end
-
-def bext(rd, rs1, rs2)
-  opcode = 0b000000
-  zero_10_6 = 0b00000
-  funct = 0b010100
-
-  instruction = (opcode << 26) |
-                (reg_num(rd) << 21) |
-                (reg_num(rs1) << 16) |
-                (reg_num(rs2) << 11) |
-                (zero_10_6 << 6) |
-                funct
-
-  emit(instruction)
-  puts "BEXT #{rd}, #{rs1}, #{rs2}"
-end
-
-def j(instruction_index)
-  opcode = 0b011111
-  instruction = (opcode << 26) | (instruction_index & 0x3FFFFFF)
-  emit(instruction)
-  puts "J #{instruction_index} (jump to instruction ##{instruction_index})"
-end
-
-def ssat(rd, rs, imm5)
-  if imm5.is_a?(String) && imm5.start_with?('#')
-    imm5 = imm5[1..-1].to_i  # Убираем '#' и преобразуем в число
-  else
-    imm5 = imm5.to_i
+    emit(instruction)
+    puts "SBIT #{rd}, #{rs}, ##{imm5}"
   end
 
-  opcode = 0b001101
-  zeros_10_0 = 0b00000000000
+  def bext(rd, rs1, rs2)
+    opcode = 0b000000
+    zero_10_6 = 0b00000
+    funct = 0b010100
 
-  instruction = (opcode << 26) |
-                (reg_num(rd) << 21) |
-                (reg_num(rs) << 16) |
-                (imm5 << 11) |
-                zeros_10_0
+    instruction = (opcode << 26) |
+                  (reg_num(rd) << 21) |
+                  (reg_num(rs1) << 16) |
+                  (reg_num(rs2) << 11) |
+                  (zero_10_6 << 6) |
+                  funct
 
-  emit(instruction)
-  puts "SSAT #{rd}, #{rs}, ##{imm5}"
-end
+    emit(instruction)
+    puts "BEXT #{rd}, #{rs1}, #{rs2}"
+  end
 
+  def j(instruction_index)
+    opcode = 0b011111
+    instruction = (opcode << 26) | (instruction_index & 0x3FFFFFF)
+    emit(instruction)
+    puts "J #{instruction_index} (jump to instruction ##{instruction_index})"
+  end
 
-def st(rt, offset_base)
-  opcode = 0b110111
+  def ssat(rd, rs, imm5)
+    if imm5.is_a?(String) && imm5.start_with?('#')
+      imm5 = imm5[1..-1].to_i  # Убираем '#' и преобразуем в число
+    else
+      imm5 = imm5.to_i
+    end
 
-  #  "offset(base)"
-  offset_str, base_str = offset_base.split('(')
-  base_str = base_str.chomp(')')
+    opcode = 0b001101
+    zeros_10_0 = 0b00000000000
 
-  offset = offset_str.empty? ? 0 : offset_str.to_i
-  base = base_str
+    instruction = (opcode << 26) |
+                  (reg_num(rd) << 21) |
+                  (reg_num(rs) << 16) |
+                  (imm5 << 11) |
+                  zeros_10_0
 
-  instruction = (opcode << 26) | (reg_num(base) << 21) | (reg_num(rt) << 16) | (offset & 0xFFFF)
-  emit(instruction)
+    emit(instruction)
+    puts "SSAT #{rd}, #{rs}, ##{imm5}"
+  end
 
-  puts "ST #{rt}, #{offset}(#{base})"
-end
+  def st(rt, offset_base)
+    opcode = 0b110111
 
-def stp(rt1, rt2, offset_base)
-  opcode = 0b010101
+    #  "offset(base)"
+    offset_str, base_str = offset_base.split('(')
+    base_str = base_str.chomp(')')
 
-  offset_str, base_str = offset_base.split('(')
-  base_str = base_str.chomp(')')
+    offset = offset_str.empty? ? 0 : offset_str.to_i
+    base = base_str
 
-  offset = offset_str.empty? ? 0 : offset_str.to_i
-  base = base_str
+    instruction = (opcode << 26) | (reg_num(base) << 21) | (reg_num(rt) << 16) | (offset & 0xFFFF)
+    emit(instruction)
 
-  instruction = (opcode << 26) |
-                (reg_num(base) << 21) |
-                (reg_num(rt1) << 16) |
-                (reg_num(rt2) << 11) |
-                (offset & 0x7FF)
+    puts "ST #{rt}, #{offset}(#{base})"
+  end
 
-  emit(instruction)
-  puts "STP #{rt1}, #{rt2}, #{offset}(#{base})"
-end
+  def stp(rt1, rt2, offset_base)
+    opcode = 0b010101
+
+    offset_str, base_str = offset_base.split('(')
+    base_str = base_str.chomp(')')
+
+    offset = offset_str.empty? ? 0 : offset_str.to_i
+    base = base_str
+
+    instruction = (opcode << 26) |
+                  (reg_num(base) << 21) |
+                  (reg_num(rt1) << 16) |
+                  (reg_num(rt2) << 11) |
+                  (offset & 0x7FF)
+
+    emit(instruction)
+    puts "STP #{rt1}, #{rt2}, #{offset}(#{base})"
+  end
 
 
   private

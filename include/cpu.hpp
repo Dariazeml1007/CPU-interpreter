@@ -14,7 +14,7 @@ public:
 
     void write32(uint32_t address, uint32_t value)
     {
-    // Little-endian запись
+
     write8(address,     (value >> 0) & 0xFF);
     write8(address + 1, (value >> 8) & 0xFF);
     write8(address + 2, (value >> 16) & 0xFF);
@@ -23,7 +23,7 @@ public:
 
 uint32_t read32(uint32_t address)
 {
-    // Little-endian чтение
+
     return (read8(address) << 0) |
            (read8(address + 1) << 8) |
            (read8(address + 2) << 16) |
@@ -122,6 +122,28 @@ public:
       }
 
 private:
+    enum Opcode : uint8_t
+    {
+        OP_R_FORMAT = 0b000000,
+        OP_SSAT     = 0b001101,
+        OP_STP      = 0b010101,
+        OP_BNE      = 0b011000,
+        OP_BEQ      = 0b011010,
+        OP_SBIT     = 0b011100,
+        OP_J        = 0b011111,
+        OP_ADDI     = 0b101101,
+        OP_ST       = 0b110111,
+        OP_LD       = 0b111001
+    };
+
+    enum Funct : uint8_t
+    {
+        F_CLS     = 0b001010,
+        F_ADD     = 0b010010,
+        F_BEXT    = 0b010100,
+        F_SYSCALL = 0b101000,
+        F_SUB     = 0b110110
+    };
 
     static void execute_LD     (CPU& cpu, uint32_t instr);
     static void execute_ST     (CPU& cpu, uint32_t instr);
@@ -146,31 +168,17 @@ private:
         uint8_t funct = instr & 0x3F;
 
 
-        if (opcode == 0b000000)
+        if (opcode == OP_R_FORMAT)
         {
            switch (funct)
            {
-                case 0b001010:
-                    execute_CLS(*this, instr);
-                    break;
-                case 0b010010:
-
-                    execute_ADD(*this, instr);
-                    break;
-                case 0b010100:
-
-                    execute_BEXT(*this, instr);
-                    break;
-                case 0b101000:
-                    std::cout << "Executing SYSCALL" << std::endl;
-                    execute_SYSCALL(*this, instr);
-                    break;
-                case 0b110110:
-
-                    execute_SUB(*this, instr);
-                    break;
+                case F_CLS    : execute_CLS(*this, instr);      break;
+                case F_ADD    : execute_ADD(*this, instr);      break;
+                case F_BEXT   : execute_BEXT(*this, instr);     break;
+                case F_SYSCALL: execute_SYSCALL(*this, instr);  break;
+                case F_SUB    : execute_SUB(*this, instr);      break;
                 default:
-                    std::cout << "Unknown R-format funct: 0x" << std::hex << (int)funct << std::endl;
+                    std::cerr << "Unknown R-format funct: 0x" << std::hex << (int)funct << std::endl;
             }
             return;
         }
@@ -178,17 +186,17 @@ private:
 
         switch (opcode)
         {
-            case 0b001101: execute_SSAT(*this, instr); break;    // SSAT
-            case 0b010101: execute_STP(*this, instr); break;     // STP
-            case 0b011000: execute_BNE(*this, instr); break;     // BNE
-            case 0b011010: execute_BEQ(*this, instr); break;     // BEQ
-            case 0b011100: execute_SBIT(*this, instr); break;    // SBIT
-            case 0b011111: execute_J(*this, instr); break;       // J
-            case 0b101101: execute_ADDI(*this, instr); break;    // ADDI
-            case 0b110111: execute_ST(*this, instr); break;      // ST
-            case 0b111001: execute_LD(*this, instr); break;      // LD
-        //    default:
-        //        std::cout << "Unknown instruction opcode: 0x" << std::hex << (int)opcode << std::endl;
+            case OP_SSAT: execute_SSAT(*this, instr) ;    break;
+            case OP_STP : execute_STP(*this, instr)  ;    break;
+            case OP_BNE : execute_BNE(*this, instr)  ;    break;
+            case OP_BEQ : execute_BEQ(*this, instr)  ;    break;
+            case OP_SBIT: execute_SBIT(*this, instr) ;    break;
+            case OP_J   : execute_J(*this, instr)    ;    break;
+            case OP_ADDI: execute_ADDI(*this, instr) ;    break;
+            case OP_ST  : execute_ST(*this, instr)   ;    break;
+            case OP_LD  : execute_LD(*this, instr)   ;    break;
+            default:
+               std::cerr << "Unknown instruction opcode: 0x" << std::hex << (int)opcode << std::endl;
         }
     }
 
