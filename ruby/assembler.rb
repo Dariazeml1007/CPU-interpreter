@@ -276,20 +276,20 @@ program = assembler.assemble do
 
 
   addi 'r8', 'r0', 1      # SYS_PRINT_INT
-  # instruction 17:
+  # instruction 16:
   syscall
-  # instruction 18:
+  # instruction 17:
   addi 'r8', 'r0', 0      # SYS_EXIT
-  # instruction 19:
+  # instruction 18:
   syscall
 
-  # instruction 20: (n=0)
+  # instruction 19: (n=0)
   addi 'r3', 'r0', 0      # F(0) = 0
-  # instruction 21:
+  # instruction 20:
   j 15                   # jump to output (instruction 13)
 
-  # instruction 22: (n=1)
+  # instruction 21: (n=1)
   addi 'r3', 'r0', 1      # F(1) = 1
-  # instruction 23:
+  # instruction 22:
   j 15                   # jump to output (instruction 13)
 end
