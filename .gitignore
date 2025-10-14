@@ -1,2 +1,31 @@
+# Бинарные файлы
+*.exe
+*.out
+*.app
+
+# Директория сборки
 build/
+bin/
+Debug/
+Release/
+
+# Объектные файлы
+*.o
+*.obj
+
+# Библиотеки
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+
+# Файлы IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# Логи и временные файлы
+*.log
+*.tmp
