@@ -40,22 +40,16 @@ public:
         }
     }
 
-    void run(Memory& memory, size_t max_steps = 1000)
+    void run(Memory& memory)
     {
-        std::cout << "Starting execution, max steps: " << max_steps << std::endl;
+        std::cout << "Starting execution "<< std::endl;
 
-        for (size_t i = 0; i < max_steps; i++)
+        while (!should_halt)
         {
-            if (should_halt)
-            {
-                std::cout << "Program halted normally" << std::endl;
-                return;
-            }
-
             step(memory);
         }
 
-        std::cout << "Step limit reached (" << max_steps << "), stopping" << std::endl;
+       std::cout << "Program halted normally" << std::endl;
     }
 
 
@@ -123,17 +117,17 @@ private:
     static void execute_LD     (CPU& cpu, Instruction instr, Memory& memory);
     static void execute_ST     (CPU& cpu, Instruction instr, Memory& memory);
     static void execute_STP    (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_BNE    (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_BEQ    (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_ADD    (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_SUB    (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_ADDI   (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_SBIT   (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_SSAT   (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_CLS    (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_BEXT   (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_J      (CPU& cpu, Instruction instr, Memory& memory);
-    static void execute_SYSCALL(CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_BNE    (CPU& cpu, Instruction instr);
+    static void execute_BEQ    (CPU& cpu, Instruction instr);
+    static void execute_ADD    (CPU& cpu, Instruction instr);
+    static void execute_SUB    (CPU& cpu, Instruction instr);
+    static void execute_ADDI   (CPU& cpu, Instruction instr);
+    static void execute_SBIT   (CPU& cpu, Instruction instr);
+    static void execute_SSAT   (CPU& cpu, Instruction instr);
+    static void execute_CLS    (CPU& cpu, Instruction instr);
+    static void execute_BEXT   (CPU& cpu, Instruction instr);
+    static void execute_J      (CPU& cpu, Instruction instr);
+    static void execute_SYSCALL(CPU& cpu);
 
 
 
@@ -147,11 +141,11 @@ private:
         {
             switch (funct)
             {
-                case F_CLS:     execute_CLS(*this, instr_obj, memory);     break;
-                case F_ADD:     execute_ADD(*this, instr_obj, memory);     break;
-                case F_BEXT:    execute_BEXT(*this, instr_obj, memory);    break;
-                case F_SYSCALL: execute_SYSCALL(*this, instr_obj, memory); break;
-                case F_SUB:     execute_SUB(*this, instr_obj, memory);     break;
+                case F_CLS:     execute_CLS(*this, instr_obj);     break;
+                case F_ADD:     execute_ADD(*this, instr_obj);     break;
+                case F_BEXT:    execute_BEXT(*this, instr_obj);    break;
+                case F_SYSCALL: execute_SYSCALL(*this); break;
+                case F_SUB:     execute_SUB(*this, instr_obj);     break;
                 default:
                     std::cerr << "Unknown R-format funct: 0x" << std::hex << (int)funct << std::endl;
             }
@@ -160,13 +154,13 @@ private:
 
         switch (opcode)
         {
-            case OP_SSAT: execute_SSAT(*this, instr_obj, memory);   break;
+            case OP_SSAT: execute_SSAT(*this, instr_obj);   break;
+            case OP_BNE:  execute_BNE(*this, instr_obj);    break;
+            case OP_BEQ:  execute_BEQ(*this, instr_obj);    break;
+            case OP_SBIT: execute_SBIT(*this, instr_obj);   break;
+            case OP_J:    execute_J(*this, instr_obj);      break;
+            case OP_ADDI: execute_ADDI(*this, instr_obj);   break;
             case OP_STP:  execute_STP(*this, instr_obj, memory);    break;
-            case OP_BNE:  execute_BNE(*this, instr_obj, memory);    break;
-            case OP_BEQ:  execute_BEQ(*this, instr_obj, memory);    break;
-            case OP_SBIT: execute_SBIT(*this, instr_obj, memory);   break;
-            case OP_J:    execute_J(*this, instr_obj, memory);      break;
-            case OP_ADDI: execute_ADDI(*this, instr_obj, memory);   break;
             case OP_ST:   execute_ST(*this, instr_obj, memory);     break;
             case OP_LD:   execute_LD(*this, instr_obj, memory);     break;
             default:

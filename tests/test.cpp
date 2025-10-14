@@ -18,14 +18,14 @@ void write_code_to_memory(const std::vector<uint32_t>& program, Memory& memory, 
 }
 
 
-void test_(const std::vector<uint32_t>& program, int expected_result, const std::string& test_name)
+void test_(const std::vector<uint32_t>& program, uint32_t expected_result, const std::string& test_name)
 {
     std::cout << "=== " << test_name << " ===" << std::endl;
     Memory memory(64 * 1024);
     CPU cpu;
 
     write_code_to_memory(program, memory, cpu);
-    cpu.run(memory, 10);
+    cpu.run(memory);
 
     uint32_t result = cpu.get_register(3); // r3
     std::cout << "Result: r3 = " << result << std::endl;
@@ -115,17 +115,24 @@ void tests()
         "SSAT: saturate 31 to 3 bits"
     );
 
-    // Тест 7: LD
-    test_(
-        {
-            UINT32_C(0b10110100000000010000000000010000), // ADDI r1, r0, 0x1000
-            UINT32_C(0b11100100001000110000000000000000), // LD r3, 0(r1)
-            UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
-            UINT32_C(0b00000000000000000000000000101000), // SYSCALL
-        },
-        0,
-        "LD: load from data segment"
-    );
+   test_(
+    {
+        // Подготовка данных
+        UINT32_C(0b10110100000000010000000000100000), // ADDI r1, r0, 0x20 (32) - адрес
+        UINT32_C(0b10110100000000100000000000101010), // ADDI r2, r0, 0x2A (42) - значение
+        UINT32_C(0b11011100001000100000000000000000), // ST r2, 0(r1) - сохраняем 42 по адресу 32
+
+        // Тест LD с нулевым offset
+        UINT32_C(0b10110100000000110000000000100000), // ADDI r3, r0, 0x20 (32) - base
+        UINT32_C(0b11100100011001000000000000000000), // LD r4, 0(r3) - загружаем с offset=0
+
+        // Завершение
+        UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
+        UINT32_C(0b00000000000000000000000000101000), // SYSCALL
+    },
+    42,
+    "LD: basic 16-bit offset test"
+);
 
     // Тест 8: BEQ (branch if equal)
     test_(
@@ -181,21 +188,21 @@ test_(
     0,  // Ожидаем 0, т.к. r3 не менялся
     "J: simple jump to exit"
 );
+test_(
+    {
+        UINT32_C(0b10110100000000010000000000101010), // ADDI r1, r0, 0x2A (42) ← ИСПРАВЛЕНО!
+        UINT32_C(0b10110100000000100000000000011111), // ADDI r2, r0, 0x1F (31)
+        UINT32_C(0b10110100000001000000100000000000), // ADDI r4, r0, 0x800 (2048)
+        UINT32_C(0b01010100100000010001000000000000), // STP r1, r2, 0(r4)
+        UINT32_C(0b11100100100000110000000000000000), // LD r3, 0(r4)
+        UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
+        UINT32_C(0b00000000000000000000000000101000), // SYSCALL
+    },
+    0x2A,
+    "STP+LD: with safe high address"
+);
 
-    // Тест 11: STP (store pair)
-    test_(
-        {
-            UINT32_C(0b10110100000000010000000000101010), // ADDI r1, r0, 0x2A
-            UINT32_C(0b10110100000000100000000000011111), // ADDI r2, r0, 0x1F
-            UINT32_C(0b10110100000001000000000000100000), // ADDI r4, r0, 0x20
-            UINT32_C(0b01010100100000010001000000000000), // STP r1, r2, 0(r4)
-            UINT32_C(0b11100100100000110000000000000000), // LD r3, 0(r4)
-            UINT32_C(0b10110100000010000000000000000000), // ADDI r8, r0, 0 (EXIT)
-            UINT32_C(0b00000000000000000000000000101000), // SYSCALL
-        },
-        0x2A,
-        "STP: store pair in data segment"
-    );
+
 
     // Тест 13: SYSCALL
     test_(

@@ -7,65 +7,35 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(RUN_TESTS "Build test executable" OFF)
 
-include_directories(include)
+# ОБЩИЕ настройки компиляции
+set(COMMON_COMPILE_OPTIONS
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
+)
 
 # Основной эмулятор
 set(EMULATOR_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/cpu.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/main.cpp
+    source/cpu.cpp
+    source/main.cpp
 )
 
-# Проверка существования файлов
-foreach(source ${EMULATOR_SOURCES})
-    if(NOT EXISTS ${source})
-        message(FATAL_ERROR "Source file not found: ${source}")
-    endif()
-endforeach()
-
-# Основной исполняемый файл
 add_executable(cpu_emulator ${EMULATOR_SOURCES})
-target_compile_options(cpu_emulator PRIVATE -Wall -Wextra)
 target_include_directories(cpu_emulator PRIVATE include)
+target_compile_options(cpu_emulator PRIVATE ${COMMON_COMPILE_OPTIONS})
 
-# Тестовый исполняемый файл (только если включена опция)
+# Тестовый исполняемый файл
 if(RUN_TESTS)
-    # Тестовые исходники
     set(TEST_SOURCES
-        ${CMAKE_CURRENT_SOURCE_DIR}/source/cpu.cpp    # общий код CPU
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp    # тесты со своим main()
+        source/cpu.cpp
+        tests/test.cpp
     )
 
-    foreach(source ${TEST_SOURCES})
-        if(NOT EXISTS ${source})
-            message(FATAL_ERROR "Test source file not found: ${source}")
-        endif()
-    endforeach()
-
     add_executable(cpu_emulator_tests ${TEST_SOURCES})
-    target_compile_options(cpu_emulator_tests PRIVATE -Wall -Wextra)
     target_include_directories(cpu_emulator_tests PRIVATE include)
+    target_compile_options(cpu_emulator_tests PRIVATE ${COMMON_COMPILE_OPTIONS})
     target_compile_definitions(cpu_emulator_tests PRIVATE RUN_TESTS)
     message(STATUS "Building test executable: cpu_emulator_tests")
 else()
     message(STATUS "Building main executable only: cpu_emulator")
-endif()
-
-find_package(Ruby REQUIRED)
-if(Ruby_FOUND)
-    message(STATUS "Found Ruby: ${RUBY_EXECUTABLE}")
-
-    add_custom_target(assemble
-        COMMAND ${RUBY_EXECUTABLE} ${CMAKE_SOURCE_DIR}/ruby/assembler.rb
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/ruby
-        COMMENT "Running Ruby assembler..."
-    )
-
-    add_custom_target(run
-        COMMAND ${CMAKE_SOURCE_DIR}/build/cpu_emulator
-        DEPENDS cpu_emulator assemble
-        COMMENT "Running emulator with assembled program..."
-    )
-
-else()
-    message(WARNING "Ruby not found - assembler will not work")
 endif()

@@ -19,14 +19,15 @@ enum Syscalls_
 void CPU::execute_LD(CPU& cpu, Instruction instr, Memory& memory)
 {
     uint8_t base  = instr.rd;
+    uint8_t rt = instr.rs1;
     int16_t offset = instr.imm;
 
-    uint32_t address = cpu.gpr[instr.rd] + offset;
+    uint32_t address = cpu.gpr[base] + offset;
 
-    cpu.gpr[instr.rt] = memory.read<uint32_t>(address);
+    cpu.gpr[rt] = memory.read<uint32_t>(address);
 }
 
-void CPU::execute_CLS(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_CLS(CPU& cpu, Instruction instr)
 {
     uint8_t rd = instr.rd;
     uint8_t rs = instr.rs1;
@@ -56,7 +57,7 @@ void CPU::execute_CLS(CPU& cpu, Instruction instr, Memory& memory)
 
 }
 
-void CPU::execute_SYSCALL(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_SYSCALL(CPU& cpu)
 {
     uint32_t syscall_num = cpu.gpr[8];
 
@@ -90,7 +91,7 @@ void CPU::execute_SYSCALL(CPU& cpu, Instruction instr, Memory& memory)
     }
 }
 
-void CPU::execute_BNE(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_BNE(CPU& cpu, Instruction instr)
 {
     uint8_t rs = instr.rd;
     uint8_t rt = instr.rt;
@@ -105,7 +106,7 @@ void CPU::execute_BNE(CPU& cpu, Instruction instr, Memory& memory)
     }
 }
 
-void CPU::execute_BEQ(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_BEQ(CPU& cpu, Instruction instr)
 {
     uint8_t rs  = instr.rd ;
     uint8_t rt    = instr.rt;
@@ -120,14 +121,14 @@ void CPU::execute_BEQ(CPU& cpu, Instruction instr, Memory& memory)
 
 }
 
-void CPU::execute_SBIT(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_SBIT(CPU& cpu, Instruction instr)
 {
     uint8_t rd = instr.rd;
     uint8_t imm5 = instr.rs2;
 
     cpu.gpr[rd] = (1 << imm5);
 }
-void CPU::execute_BEXT(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_BEXT(CPU& cpu, Instruction instr)
 {
     uint8_t rd = instr.rd;
     uint8_t rs1 = instr.rs1;
@@ -153,7 +154,7 @@ void CPU::execute_BEXT(CPU& cpu, Instruction instr, Memory& memory)
     cpu.gpr[rd] = result;
 }
 
-void CPU::execute_SUB(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_SUB(CPU& cpu, Instruction instr)
 {
     uint8_t rs = instr.rd;
     uint8_t rt = instr.rs1;
@@ -163,7 +164,7 @@ void CPU::execute_SUB(CPU& cpu, Instruction instr, Memory& memory)
 
 }
 
-void CPU::execute_ADDI(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_ADDI(CPU& cpu, Instruction instr)
 {
     uint8_t rs = instr.rd;
     uint8_t rt = instr.rs1;
@@ -172,7 +173,7 @@ void CPU::execute_ADDI(CPU& cpu, Instruction instr, Memory& memory)
     cpu.gpr[rt] = cpu.gpr[rs] + imm;
 }
 
-void CPU::execute_ADD(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_ADD(CPU& cpu, Instruction instr)
 {
     uint8_t rs = instr.rd;
     uint8_t rt = instr.rs1;
@@ -182,7 +183,7 @@ void CPU::execute_ADD(CPU& cpu, Instruction instr, Memory& memory)
 
 }
 
-void CPU::execute_J(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_J(CPU& cpu, Instruction instr)
 {
     uint32_t index = instr.target;
     uint32_t base = cpu.pc & 0xFFFFF000;
@@ -193,7 +194,7 @@ void CPU::execute_J(CPU& cpu, Instruction instr, Memory& memory)
 
 }
 
-void CPU::execute_SSAT(CPU& cpu, Instruction instr, Memory& memory)
+void CPU::execute_SSAT(CPU& cpu, Instruction instr)
 {
     uint8_t rd = instr.rd;
     uint8_t rs =  instr.rs1;
@@ -257,4 +258,5 @@ void CPU::execute_STP(CPU& cpu, Instruction instr, Memory& memory)
 
     memory.write<uint32_t>(addr, cpu.gpr[rt1]);
     memory.write<uint32_t>(addr + 4, cpu.gpr[rt2]);
+
 }

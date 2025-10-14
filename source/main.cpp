@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     CPU cpu;
 
     load_binary_file(memory, cpu, argv[1]);
-    cpu.run(memory, 1000);
+    cpu.run(memory);
 
     return 0;
 }

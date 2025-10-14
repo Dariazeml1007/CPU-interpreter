@@ -11,9 +11,9 @@ cmake -B build -D RUN_TESTS=OFF
   ```bash
 cmake --build build
  ```
- 3. Navigate to build directory and run custom assemble step
+ 3. Navigate to ruby directory and run custom assemble step
  ```bash
-cd build && make assemble && cd ..
+cd ruby && ruby assembler.rb && cd ..
  ```
  4. Run the emulator executable
  ```bash
