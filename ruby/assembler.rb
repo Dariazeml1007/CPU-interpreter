@@ -5,6 +5,10 @@ class Assembler
     @pc = 0
   end
 
+    (0..31).each do |i|
+    define_method("r#{i}") { "r#{i}" }
+  end
+
   def assemble(&block)
     puts "Assembler is beginning: "
     instance_eval(&block)
@@ -210,22 +214,9 @@ class Assembler
     @pc += 4
   end
 
-  def reg_num(reg)
-    case reg.to_s.downcase
-    when 'r0', 'zero' then 0
-    when 'r1' then 1
-    when 'r2' then 2
-    when 'r3' then 3
-    when 'r4' then 4
-    when 'r5' then 5
-    when 'r6' then 6
-    when 'r7' then 7
-    when 'r8' then 8
-    when 'r9' then 9
-    when 'r10' then 10
-    else reg.to_i
-    end
-  end
+def reg_num(reg)
+  reg.to_s.delete('r').to_i
+end
 
   def generate_binary
     puts "\nGenerating bin file"
@@ -249,47 +240,49 @@ class Assembler
   end
 end
 
+# foreach 0..31 define method
+
 assembler = Assembler.new
 program = assembler.assemble do
-  addi 'r8', 'r0', 3      # SYS_READ_INT
+  addi r8, r0, 3      # SYS_READ_INT
   syscall
-  add 'r1', 'r0', 'r3'    # r1 = n (из r3)
+  add r1, r0, r3    # r1 = n (из r3)
 
 
-  addi 'r2', 'r0', 0      # F(n-2) = 0
-  addi 'r3', 'r0', 1      # F(n-1) = 1
-  addi 'r4', 'r0', 1      # i = 1
+  addi r2, r0, 0      # F(n-2) = 0
+  addi r3, r0, 1      # F(n-1) = 1
+  addi r4, r0, 1      # i = 1
 
 
-  addi 'r5', 'r0', 0
-  beq 'r1', 'r5', 12       # if n == 0, jump to output_0 (instruction 16)
+  addi r5, r0, 0
+  beq r1, r5, 12       # if n == 0, jump to output_0 (instruction 19)
 
-  addi 'r5', 'r0', 1
-  beq 'r1', 'r5', 12       # if n == 1, jump to output_1 (instruction 17)
+  addi r5, r0, 1
+  beq r1, r5, 12       # if n == 1, jump to output_1 (instruction 21)
 
   # instruction 11:
-  addi 'r4', 'r4', 1      # i++
-  add 'r6', 'r2', 'r3'    # temp = a + b
-  add 'r2', 'r0', 'r3'    # a = b
-  add 'r3', 'r0', 'r6'    # b = temp
-  bne 'r4', 'r1', -5      # loop
+  addi r4, r4, 1      # i++
+  add r6, r2, r3    # temp = a + b
+  add r2, r0, r3    # a = b
+  add r3, r0, r6    # b = temp
+  bne r4, r1, -5     # loop
 
 
-  addi 'r8', 'r0', 1      # SYS_PRINT_INT
+  addi r8, r0, 1      # SYS_PRINT_INT
   # instruction 16:
   syscall
   # instruction 17:
-  addi 'r8', 'r0', 0      # SYS_EXIT
+  addi r8, r0, 0      # SYS_EXIT
   # instruction 18:
   syscall
 
   # instruction 19: (n=0)
-  addi 'r3', 'r0', 0      # F(0) = 0
+  addi r3, r0, 0      # F(0) = 0
   # instruction 20:
   j 15                   # jump to output (instruction 13)
 
   # instruction 21: (n=1)
-  addi 'r3', 'r0', 1      # F(1) = 1
+  addi r3, r0, 1      # F(1) = 1
   # instruction 22:
   j 15                   # jump to output (instruction 13)
 end

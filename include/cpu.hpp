@@ -4,56 +4,58 @@
 #include <array>
 #include <iostream>
 
-class Memory
-{
-private:
-    std::vector<uint8_t> data;
-
-public:
-    Memory(size_t size_in_bytes) : data(size_in_bytes, 0) {}
-
-    void write32(uint32_t address, uint32_t value)
-    {
-
-    write8(address,     (value >> 0) & 0xFF);
-    write8(address + 1, (value >> 8) & 0xFF);
-    write8(address + 2, (value >> 16) & 0xFF);
-    write8(address + 3, (value >> 24) & 0xFF);
-    }
-
-uint32_t read32(uint32_t address)
-{
-
-    return (read8(address) << 0) |
-           (read8(address + 1) << 8) |
-           (read8(address + 2) << 16) |
-           (read8(address + 3) << 24);
-}
-    uint8_t read8(uint32_t address) const { return data[address]; }
-    void write8(uint32_t address, uint8_t value) { data[address] = value; }
-
-    size_t size() const { return data.size(); }
-};
+#include "memory.hpp"
 
 class CPU
 {
 private:
     std::array<uint32_t, 32> gpr;
     uint32_t pc;
-    std::unique_ptr<Memory> memory;
     bool should_halt = false;
+    bool branch_flag = false;
 
 public:
 
-    CPU(size_t memory_size = 64 * 1024) : pc(0), memory(std::make_unique<Memory>(memory_size))
-    {
+     CPU() : pc(0) {
         reset();
     }
 
-    void reset()
-    {
+    void reset() {
         pc = 0;
         std::fill(gpr.begin(), gpr.end(), 0);
+        should_halt = false;
+    }
+
+    void step(Memory& memory)
+    {
+
+        uint32_t raw_instr = memory.read<uint32_t>(pc);
+        Instruction instr_obj(raw_instr);
+        branch_flag = false;
+        execute_instruction(instr_obj, memory);
+
+        if (!branch_flag)
+        {
+            pc += 4;
+        }
+    }
+
+    void run(Memory& memory, size_t max_steps = 1000)
+    {
+        std::cout << "Starting execution, max steps: " << max_steps << std::endl;
+
+        for (size_t i = 0; i < max_steps; i++)
+        {
+            if (should_halt)
+            {
+                std::cout << "Program halted normally" << std::endl;
+                return;
+            }
+
+            step(memory);
+        }
+
+        std::cout << "Step limit reached (" << max_steps << "), stopping" << std::endl;
     }
 
 
@@ -73,55 +75,28 @@ public:
     uint32_t get_pc() const { return pc; }
     void set_pc(uint32_t value) { pc = value; }
 
-    Memory* get_memory() { return memory.get(); }
-    const Memory* get_memory() const { return memory.get(); }
+private:
 
-
-    uint32_t get_sp() const { return gpr[2]; }
-    uint32_t get_ra() const { return gpr[1]; }
-    uint32_t get_a0() const { return gpr[10]; }
-
-
-    void step()
+    static int32_t sign_extend(uint32_t value, uint8_t bits)
     {
-       uint32_t current_pc = pc;
-       uint32_t instr = memory->read32(current_pc);
-
-       execute_instruction( instr);
-
-
-       if (pc == current_pc)
-       {
-           pc = current_pc + 4;
-       }
+    int32_t x = static_cast<int32_t>(value);
+    int32_t mask = 1u << (bits - 1);
+    return (x ^ mask) - mask;
     }
 
-
-    void run(size_t max_steps = 1000)
+    struct Instruction
     {
-          std::cout << "Starting execution, max steps: " << max_steps << std::endl;
+        uint8_t opcode;
+        uint8_t funct;
 
-          for (size_t i = 0; i < max_steps; i++)
-          {
-              if (should_halt)
-              {
-                  std::cout << "Program halted normally" << std::endl;
-                  return;
-              }
+        uint8_t rs1, rs2, rd, rt;
+        int32_t imm;
+        uint32_t target, offset;
 
-              if (pc >= memory->size())
-              {
-                  std::cout << "PC out of memory bounds" << std::endl;
-                  return;
-              }
+        Instruction(uint32_t raw);
+    };
 
-              step();
-          }
 
-          std::cout << "Step limit reached (" << max_steps << "), stopping" << std::endl;
-      }
-
-private:
     enum Opcode : uint8_t
     {
         OP_R_FORMAT = 0b000000,
@@ -145,60 +120,75 @@ private:
         F_SUB     = 0b110110
     };
 
-    static void execute_LD     (CPU& cpu, uint32_t instr);
-    static void execute_ST     (CPU& cpu, uint32_t instr);
-    static void execute_STP    (CPU& cpu, uint32_t instr);
-    static void execute_BNE    (CPU& cpu, uint32_t instr);
-    static void execute_BEQ    (CPU& cpu, uint32_t instr);
-    static void execute_ADD    (CPU& cpu, uint32_t instr);
-    static void execute_SUB    (CPU& cpu, uint32_t instr);
-    static void execute_ADDI   (CPU& cpu, uint32_t instr);
-    static void execute_SBIT   (CPU& cpu, uint32_t instr);
-    static void execute_SSAT   (CPU& cpu, uint32_t instr);
-    static void execute_CLS    (CPU& cpu, uint32_t instr);
-    static void execute_BEXT   (CPU& cpu, uint32_t instr);
-    static void execute_J      (CPU& cpu, uint32_t instr);
-    static void execute_SYSCALL(CPU& cpu, uint32_t instr);
+    static void execute_LD     (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_ST     (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_STP    (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_BNE    (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_BEQ    (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_ADD    (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_SUB    (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_ADDI   (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_SBIT   (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_SSAT   (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_CLS    (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_BEXT   (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_J      (CPU& cpu, Instruction instr, Memory& memory);
+    static void execute_SYSCALL(CPU& cpu, Instruction instr, Memory& memory);
 
 
 
-    void execute_instruction(uint32_t instr)
+   void execute_instruction( Instruction instr_obj, Memory& memory)
     {
-        uint8_t opcode = (instr >> 26) & 0x3F;
-        uint8_t funct = instr & 0x3F;
 
+        uint8_t opcode = instr_obj.opcode;
+        uint8_t funct = instr_obj.funct;
 
         if (opcode == OP_R_FORMAT)
         {
-           switch (funct)
-           {
-                case F_CLS    : execute_CLS(*this, instr);      break;
-                case F_ADD    : execute_ADD(*this, instr);      break;
-                case F_BEXT   : execute_BEXT(*this, instr);     break;
-                case F_SYSCALL: execute_SYSCALL(*this, instr);  break;
-                case F_SUB    : execute_SUB(*this, instr);      break;
+            switch (funct)
+            {
+                case F_CLS:     execute_CLS(*this, instr_obj, memory);     break;
+                case F_ADD:     execute_ADD(*this, instr_obj, memory);     break;
+                case F_BEXT:    execute_BEXT(*this, instr_obj, memory);    break;
+                case F_SYSCALL: execute_SYSCALL(*this, instr_obj, memory); break;
+                case F_SUB:     execute_SUB(*this, instr_obj, memory);     break;
                 default:
                     std::cerr << "Unknown R-format funct: 0x" << std::hex << (int)funct << std::endl;
             }
             return;
         }
 
-
         switch (opcode)
         {
-            case OP_SSAT: execute_SSAT(*this, instr) ;    break;
-            case OP_STP : execute_STP(*this, instr)  ;    break;
-            case OP_BNE : execute_BNE(*this, instr)  ;    break;
-            case OP_BEQ : execute_BEQ(*this, instr)  ;    break;
-            case OP_SBIT: execute_SBIT(*this, instr) ;    break;
-            case OP_J   : execute_J(*this, instr)    ;    break;
-            case OP_ADDI: execute_ADDI(*this, instr) ;    break;
-            case OP_ST  : execute_ST(*this, instr)   ;    break;
-            case OP_LD  : execute_LD(*this, instr)   ;    break;
+            case OP_SSAT: execute_SSAT(*this, instr_obj, memory);   break;
+            case OP_STP:  execute_STP(*this, instr_obj, memory);    break;
+            case OP_BNE:  execute_BNE(*this, instr_obj, memory);    break;
+            case OP_BEQ:  execute_BEQ(*this, instr_obj, memory);    break;
+            case OP_SBIT: execute_SBIT(*this, instr_obj, memory);   break;
+            case OP_J:    execute_J(*this, instr_obj, memory);      break;
+            case OP_ADDI: execute_ADDI(*this, instr_obj, memory);   break;
+            case OP_ST:   execute_ST(*this, instr_obj, memory);     break;
+            case OP_LD:   execute_LD(*this, instr_obj, memory);     break;
             default:
-               std::cerr << "Unknown instruction opcode: 0x" << std::hex << (int)opcode << std::endl;
+                std::cerr << "Unknown instruction opcode: 0x" << std::hex << (int)opcode << std::endl;
         }
     }
 
 };
 
+
+inline CPU::Instruction::Instruction(uint32_t raw)
+{
+    opcode = (raw >> 26) & 0x3F;                        // [31:26]
+    funct  = raw & 0x3F;                                // [5:0]
+
+    rd = (raw >> 21) & 0x1F;                            // [25:21]
+    rs1 = (raw >> 16) & 0x1F;                           // [20:16]
+    rs2  = (raw >> 11) & 0x1F;                          // [15:11]
+    rt  = rs1;
+
+    imm =  sign_extend(raw & 0xFFFF, 16);              // [15:0], sign-extended
+
+    target = raw & 0x3FFFFFF;                           // [25:0] для J
+    offset = sign_extend(raw & 0x7FF, 11);              // [0:10] stp
+}

@@ -23,6 +23,10 @@ cd build && make assemble && cd ..
 To run automated tests instead  - rebuild the project with RUN_TESTS=ON
   ```c
 cmake -B build -D RUN_TESTS=ON
+
+cmake --build build
+
+./build/cpu_emulator_tests
   ```
 
 ---
