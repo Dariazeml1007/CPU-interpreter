@@ -29,3 +29,4 @@ Release/
 # Логи и временные файлы
 *.log
 *.tmp
+ruby/output.bin
