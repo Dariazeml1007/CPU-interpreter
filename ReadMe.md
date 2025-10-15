@@ -11,13 +11,13 @@ cmake -B build -D RUN_TESTS=OFF
   ```bash
 cmake --build build
  ```
- 3. Navigate to ruby directory and run custom assemble step
+ 3. Navigate to ruby directory and run assembler program (in my case is fibonacci_asm.rb)
  ```bash
-cd ruby && ruby assembler.rb && cd ..
+cd ruby && ruby fibonacci_asm.rb ../build/program.bin && cd ..
  ```
  4. Run the emulator executable
  ```bash
-./build/cpu_emulator
+./build/cpu_emulator ../build/program.bin
 ```
 ##  Run Built-in Tests
 To run automated tests instead  - rebuild the project with RUN_TESTS=ON
