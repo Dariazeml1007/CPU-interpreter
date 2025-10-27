@@ -30,3 +30,7 @@ Release/
 *.log
 *.tmp
 ruby/output.bin
+
+# CLI11 library
+source/CLI11.hpp
+source/CLI/

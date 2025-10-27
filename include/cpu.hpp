@@ -68,6 +68,7 @@ public:
 
     uint32_t get_pc() const { return pc; }
     void set_pc(uint32_t value) { pc = value; }
+    bool is_halted() const { return should_halt; }
 
 private:
 
